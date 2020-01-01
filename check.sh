@@ -1,0 +1,1 @@
+kubectl -n hostdb get pods | grep vrops | while read name ready sts restarts age; do if [[ "$sts" == "ImageInspectError" ]]; then kubectl delete pod "$name"; fi; done

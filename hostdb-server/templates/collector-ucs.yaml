@@ -1,0 +1,30 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hostdb-collector-ucs
+spec:
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      completions: 1
+      template:
+        spec:
+          containers:
+            - name: hostdb-collector-ucs
+              image: registry.pdxfixit.com/hostdb-collector-ucs
+              env:
+                - name: HOSTDB_COLLECTOR_UCS_HOSTDB_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ template "name" . }}-admin
+                      key: password
+                - name: HOSTDB_COLLECTOR_UCS_UCS_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: hostdb-collector-ucs
+                      key: password
+          restartPolicy: OnFailure
+  schedule: "0 */4 * * *"
+  startingDeadlineSeconds: 60
+  successfulJobsHistoryLimit: 1
+  suspend: false

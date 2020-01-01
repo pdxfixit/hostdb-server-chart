@@ -1,0 +1,30 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hostdb-collector-oneview
+spec:
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      completions: 1
+      template:
+        spec:
+          containers:
+            - name: hostdb-collector-oneview
+              image: registry.pdxfixit.com/hostdb-collector-oneview
+              env:
+                - name: HOSTDB_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ template "name" . }}-admin
+                      key: password
+                - name: HOSTDB_COLLECTOR_ONEVIEW_ONEVIEW_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: hostdb-collector-oneview
+                      key: password
+          restartPolicy: OnFailure
+  schedule: "0 */4 * * *"
+  startingDeadlineSeconds: 60
+  successfulJobsHistoryLimit: 1
+  suspend: false

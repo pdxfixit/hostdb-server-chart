@@ -1,0 +1,5 @@
+apiVersion: v2
+description: HostDB Helm chart for Kubernetes
+name: hostdb-server
+type: application
+version: 1.2.0

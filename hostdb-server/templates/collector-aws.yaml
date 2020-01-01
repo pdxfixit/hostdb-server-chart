@@ -1,0 +1,34 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hostdb-collector-aws
+spec:
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      completions: 1
+      template:
+        spec:
+          containers:
+            - name: hostdb-collector-aws
+              image: registry.pdxfixit.com/hostdb-collector-aws
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: hostdb-collector-aws
+                      key: id
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: hostdb-collector-aws
+                      key: key
+                - name: HOSTDB_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ template "name" . }}-admin
+                      key: password
+          restartPolicy: OnFailure
+  schedule: "0 * * * *"
+  startingDeadlineSeconds: 60
+  suspend: false

@@ -1,0 +1,9 @@
+Thanks for launching HostDB!
+
+Please run the following command to get the IP address where the service can be reached:
+
+$ kubectl get ingress -n hostdb -o jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}"
+
+Please refer to the HostDB server chart README for further instruction.
+
+https://github.com/pdxfixit/hostdb-server-chart

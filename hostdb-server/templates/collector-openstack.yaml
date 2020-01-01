@@ -1,0 +1,40 @@
+{{- range $datacenter, $frequency := .Values.openstack_datacenters }}
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hostdb-collector-openstack-{{ $datacenter }}
+spec:
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      completions: 1
+      template:
+        spec:
+          containers:
+            - name: hostdb-collector-openstack
+              image: registry.pdxfixit.com/hostdb-collector-openstack
+              command: ['/openstack-collector/bin/hostdb_collector_openstack']
+              env:
+                - name: DATACENTER
+                  value: {{ $datacenter | quote }}
+                - name: HOSTDB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ template "name" $ }}-admin
+                      key: password
+                - name: HOSTDB_USERNAME
+                  value: writer
+                - name: OS_USERNAME
+                  value: hostdb
+                - name: OS_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: hostdb-collector-openstack
+                      key: password
+          restartPolicy: OnFailure
+  schedule: "*/{{ $frequency }} * * * *"
+  startingDeadlineSeconds: 60
+  successfulJobsHistoryLimit: 1
+  suspend: false
+{{- end }}

@@ -1,0 +1,33 @@
+replicaCount: 3
+image:
+  repository: registry.pdxfixit.com/hostdb-server
+  tag: latest
+  pullPolicy: Always
+service:
+  name: hostdb-server
+  type: NodePort
+  externalPort: 8080
+  internalPort: 8080
+ingress:
+  enabled: true
+  hosts:
+    - hostdb.pdxfixit.com
+  annotations:
+    virtual-server.f5.com/ip: 10.20.30.40
+    virtual-server.f5.com/health: |
+      [
+        {
+          "path": "/",
+          "send": "GET /health\r\n",
+          "interval": 5,
+          "timeout": 10
+        }
+      ]
+  tls:
+    - secretName: hostdb-tls
+openstack_datacenters:
+# dc: */n * * * *
+  sin: 30
+  sj: 10
+  va: 10
+  va2: 10

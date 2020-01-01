@@ -1,0 +1,31 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hostdb-collector-vrops
+spec:
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      completions: 1
+      template:
+        spec:
+          containers:
+            - name: hostdb-collector-vrops
+              image: registry.pdxfixit.com/hostdb-collector-vrops
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: HOSTDB_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: hostdb-server-admin
+                      key: password
+                - name: HOSTDB_COLLECTOR_VROPS_VROPS_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: hostdb-collector-vrops
+                      key: password
+          restartPolicy: OnFailure
+  schedule: "0 */4 * * *"
+  startingDeadlineSeconds: 60
+  successfulJobsHistoryLimit: 1
+  suspend: false

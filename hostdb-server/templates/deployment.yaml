@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "name" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: HOSTDB_HOSTDB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "name" . }}-admin
+                  key: password
+            - name: HOSTDB_MARIADB_HOST
+              value: $(MARIADB_SERVICE_HOST)
+            - name: HOSTDB_MARIADB_PORT
+              value: $(MARIADB_SERVICE_PORT)
+            - name: HOSTDB_MARIADB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "name" . }}-db
+                  key: username
+            - name: HOSTDB_MARIADB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "name" . }}-db
+                  key: password
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.internalPort }}
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /etc/hostdb/
+              name: hostdb-config
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.internalPort }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.internalPort }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}
+      volumes:
+        - name: hostdb-config
+          configMap:
+            name: {{ template "name" . }}
